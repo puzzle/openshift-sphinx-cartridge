@@ -1,0 +1,138 @@
+#!/bin/sh
+#
+# sphinx searchd Free open-source SQL full-text search engine
+#
+# chkconfig:   - 20 80
+# description: Starts and stops the sphinx searchd daemon that handles \
+#        all search requests.
+
+### BEGIN INIT INFO
+# Provides: searchd
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs $network
+# Should-Start: $remote_fs
+# Should-Stop: $remote_fs
+# Default-Start: 
+# Default-Stop: 0 1 2 3 4 5 6
+# Short-Description: start and stop sphinx searchd daemon
+# Description: Sphinx is a free open-source SQL full-text search engine     
+### END INIT INFO
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+servicename_prefix=sphinx
+exec="${OPENSHIFT_SPHINX_DIR}/usr/bin/searchd"
+prog="searchd"
+configfiles_dir=${OPENSHIFT_SPHINX_DIR}/etc/sphinx
+lockfile=${OPENSHIFT_SPHINX_DIR}/var/lock/subsys/searchd
+
+find_configs() {
+  CONFIGS=`ls -1 $configfiles_dir/* 2> /dev/null`
+}
+
+start() {
+    [ -x $exec ] || exit 5
+    find_configs
+    echo -n $"Starting $prog: "
+    for c in $CONFIGS; do
+      [ -L $c ] && c=`readlink $c`
+      conf=`basename $c`
+      name=`echo $conf | sed s/\.conf//`
+      servicename="${servicename_prefix}.${name}"
+      echo -n $srv
+      # if not running, start it up here, usually something like "daemon $exec"
+      daemon --check $servicename $exec --pidfile --config $c
+      echo
+      ret=$?; [ $ret != 0 ] && retval=$ret
+    done
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
+}
+
+stop() {
+    find_configs
+    echo -n $"Stopping $prog: "
+    retval=0
+    # stop it here, often "killproc $prog"
+    for c in $CONFIGS; do
+      [ -L $c ] && c=`readlink $c`
+      conf=`basename $c`
+      pidfile=`grep pid_file $c | awk '{ print $3 }'`
+      name=`echo $conf | sed s/\.conf//`
+      servicename="${servicename_prefix}.${name}"
+      echo -n $srv 
+      killproc -p $pidfile $exec -TERM
+      echo
+      ret=$?; [ $ret != 0 ] && retval=$ret
+      [ $ret -eq 0 ] && rm -f $pidfile
+    done
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    restart
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+  find_configs
+  retval=0
+  for c in $CONFIGS; do
+    [ -L $c ] && c=`readlink $c`
+    conf=`basename $c`
+    pidfile=`grep pid_file $c | awk '{ print $3 }'`
+    name=`echo $conf | sed s/\.conf//`
+    servicename="${servicename_prefix}.${name}"
+    echo -n "${servicename} :"
+    status -p $pidfile $exec
+    ret=$?; [ $ret != 0 ] && retval=$ret
+  done
+  return $retval
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
+esac
+exit $?

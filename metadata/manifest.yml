@@ -1,0 +1,37 @@
+Name: sphinx
+Cartridge-Short-Name: sphinx
+Display-Name: Sphinx 2.26.0
+Description: "Sphinx Open Source Server add-on cartridge.
+Sphinx is a full-text search server that adds many advanced features
+on top of plain old text searching. Data can be fetched directly from
+a database, or streamed in XML format. MySQL, PostgreSQL, SQL Server,
+Oracle, and other databases are supported. Client programs can query
+Sphinx either using native SphinxAPI library, or using regular MySQL
+client programs and libraries via SQL-like SphinxQL interface."
+Version: 2.2.8
+License: GPL
+Vendor: sphinxsearch.com
+Cartridge-Version: 1.0.0
+Cartridge-Vendor: puzzleitc
+Compatible-Versions:
+- 1.0.0
+Categories:
+- embedded
+- service
+Help-Topics:
+Getting Started Guide: https://github.com/puzzle/openshift-sphinx-cartridge
+Provides:
+- sphinx-2.2.8
+- sphinx
+Scaling:
+  Min: 1
+  Max: 1
+Group-Overrides:
+- components:
+  - sphinx
+  - web_framework
+Endpoints:
+  - Private-IP-Name:   HOST
+    Private-Port-Name: PORT
+    Private-Port:      9312
+    Public-Port-Name:  PROXY_PORT
