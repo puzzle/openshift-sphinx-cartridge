@@ -44,7 +44,7 @@ start() {
       # if not running, start it up here, usually something like "daemon $exec"
       daemon --check $servicename $exec --pidfile --config $c
       echo
-      ret=$?; [ $ret != 0 ] && retval=$ret
+      ret=$?; [ $ret != 0 ] && [ $ret != 3 ] && retval=$ret
     done
     [ $retval -eq 0 ] && touch $lockfile
     return $retval
