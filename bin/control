@@ -35,6 +35,7 @@ start() {
     [ -x $exec ] || exit 5
     find_configs
     echo -n $"Starting $prog: "
+    retval=0
     for c in $CONFIGS; do
       [ -L $c ] && c=`readlink $c`
       conf=`basename $c`
@@ -126,6 +127,7 @@ case "$1" in
         ;;
     status)
         rh_status
+        exit 0
         ;;
     condrestart|try-restart)
         rh_status_q || exit 0
